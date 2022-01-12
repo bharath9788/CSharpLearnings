@@ -1,0 +1,103 @@
+What is an Interface?
+Interface is looks like a class and it contains abstract methods. By default all methods are public. Interfaces started with the letter I.
+
+What is the usage of interfaces?
+The primary usage of interfaces is to build “loosely coupled” classes and to implement extensibility. For example, consider if we have a class Person. 
+
+   public class Person
+    {
+        void Greet()
+        {
+            Console.WriteLine("The person is greeting 🙋‍♀️ ✋");
+
+            //Greet LOGIC goes there....
+        }
+    }
+
+In the above Person, we have a logging mechanism and we use Console.WriteLine to log to the console. But, later, we decide to log it to a file instead of console logging. This requires changes in the Person class. 
+
+To resolve this, we can move the logging functionality to a new class, say ConsoleLogger.   
+  public class ConsoleLogger
+    {
+        public void LOG(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+    }
+The Person class will implement ConsoleLogger as below:
+    public class Person
+    {
+        readonly ConsoleLogger _logger = new ConsoleLogger();
+        void Greet()
+        {
+            _logger.LOG("The person is greeting 🙋‍♀️ ✋");
+
+            //Greet LOGIC goes there....
+        }
+    }
+Hence, Person class will create a ConsoleLogger instance and invoke ConsoleLogger method LOG() to log a message. This is tightly coupled because suppose there is a change in ConsoleLogger class (like log to ETW instead of a file), then we must change the code in the Person class.
+To resolve such problems, we use Interfaces. Instead of Person using ConsoleLogger class, we define an interface ILogger. Loggers can implement Logger interface (ILogger). When I say loggers, we may have different loggers, such as console logger, file logger. In future, if we have to add a new logger (such as ETW) logger, then we can create a new class for logger and implement ILogger. Hence Person class will never change. Let’s demonstrate this. I understand the above statements are quite confusing but when you see the below example, you will be very clear about interfaces.
+
+Let us create a ILogger and logger classes
+
+Public interface ILogger
+    {
+        public void LOG(string message);
+
+    }
+
+    public class ConsoleLogger : ILogger
+    {
+        public void LOG(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+    }
+
+    public class FileLogger : ILogger
+    {
+        public void LOG(string message)
+        {
+            Console.WriteLine("I ahev to log to a file. For simpleicity, I am using console here");
+        }
+    }
+
+In the Person class, we have to map the logger and this is done in the constructor as below:
+This is called dependency injection.
+public class Person
+    {
+        readonly ILogger _logger;
+
+        public Person(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+
+        public void Greet()
+        {
+            _logger.LOG("The person is greeting 🙋‍♀️ ✋");
+            //Greet LOGIC goes there....
+        }
+    }
+And in main, while creating the person object, we have to pass the instance of the logger we need to use. 
+
+static void Main(string[] args)
+        {
+            var person = new Person(new ConsoleLogger());
+            person.Greet();
+
+            var person3 = new Person(new FileLogger());
+            person3.Greet();
+
+        }
+Interfaces are not for multiple inheritance
+
+Many people claim that unlike C++ where we have have multiple inheritance, c# does not support multiple inheritance. To solbe this, C# introduces inheritance. This is not right. Because when you inherihit from an interface you don’t reuse anything from interface because we cant implement methods inside interfaces. When we can reuse the code we are not inheriheting anything. This goes against OOPS. 
+
+Interfaces are used for building loosely coupled design.
+
+Another important usage is during unit testing. 
+
